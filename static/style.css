@@ -1,0 +1,36 @@
+/* style.css */
+
+/* Custom font import - Inter from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Apply Inter font to the body */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Base styles for loading indicators */
+.loading {
+    display: none; /* Hidden by default */
+    color: #666;
+    font-style: italic;
+    text-align: center;
+}
+
+/* Class to make elements visible */
+.loading:not(.hidden) {
+    display: block;
+}
+
+/* Error message styling */
+.error {
+    color: #dc2626; /* Red-600 from Tailwind */
+    font-weight: 500;
+    margin-top: 0.75rem;
+    text-align: center;
+}
+
+/* Specific styles for the answer box content */
+#answer p {
+    margin: 0;
+    line-height: 1.6;
+}
