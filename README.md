@@ -6,24 +6,87 @@ This project implements an advanced Retrieval-Augmented Generation (RAG) system 
 
 ## Key Features
 
-``Table Serialization:`` Converts tables in PDFs into context-independent text blocks, enabling the system to understand and utilize structured data effectively. This is handled by the TableSerializer class, which processes tables into a format digestible by language models.
+- **Company Document Specialization** Tailored for annual reports, adept at parsing financial tables, business terminology, and multi-page structures.
 
+- **Advanced Prompt Engineering** Leverages sophisticated prompts (see prompts.py) to rephrase questions, answer with RAG context, and enforce structured outputs (names, numbers, booleans, lists, comparisons).
 
+- **Multi-Provider Flexibility**: Seamlessly integrates with OpenAI and Gemini APIs for robust language model support.
 
-``Structured Prompts:`` Utilizes carefully crafted prompts and schemas defined in prompts.py to ensure that responses are consistent, parseable, and tailored to specific question types (e.g., names, numbers, booleans, lists, and comparative queries). This file is central to the system’s ability to handle company document queries with precision.
+- **Table Serialization**: Transforms tables into context-independent blocks, enhancing tabular data comprehension.
 
+- **Parallel Processing**: Boosts efficiency with asynchronous and parallel API request handling.
 
+- **Structured Outputs**: Uses Pydantic models to ensure consistent, schema-driven responses for downstream use.
 
-``Comparative Question Handling:`` Intelligently rephrases comparative questions (e.g., "Which company had higher revenue, 'Apple' or 'Microsoft'?") into individual queries for each company, enabling seamless multi-entity comparisons. This is driven by the RephrasedQuestionsPrompt in prompts.py.
+- **Robust Design**: Features retry logic, JSON repair, and error handling for reliability.
 
+### Beyond Vanilla RAG
 
+Unlike a standard RAG system that handles generic text corpora, thid project excels in:
 
-``Efficient Retrieval:`` Employs FAISS vector databases with OpenAI embeddings for fast and accurate retrieval of relevant document chunks, with optional reranking to enhance precision.
+- **Domain-Specific Parsing**: Tackles the intricate layouts of annual reports, including financial statements and tables.
 
+- **Contextual Table Understanding**: Serializes tables with surrounding context for accurate interpretation.
 
+- **Precision Answer Formats**: Delivers answers in strict schemas (e.g., exact numbers, full names) via prompts.py.
 
-``Asynchronous Processing:`` Supports parallel processing of multiple questions via AsyncOpenaiProcessor, significantly reducing response times for batch queries.
+- **Enhanced Retrieval**: Combines vector similarity with optional reranking for superior relevance.
 
+## Pipeline Overview
 
+- **PDF Parsing**: Extracts text, tables, and images from PDFs (pdf_parsing.py).
 
-``Robustness:`` Includes comprehensive error handling, retry logic, and logging to ensure reliability in production environments.
+- **Text Splitting**: Breaks text into chunks for embedding (text_splitter.py).
+
+- **Table Serialization**: Converts tables into usable blocks (tables_serialization.py).
+
+- **Vector Ingestion**: Stores embeddings in FAISS databases (ingestion.py).
+
+- **Retrieval**: Fetches relevant chunks for queries (retrieval.py).
+
+- **Reranking**: Refines results for accuracy (reranking.py).
+
+- **Question Answering**: Generates precise answers using RAG context (questions_processing.py).
+
+### Usage Example
+``` python
+from src.pipeline import Pipeline
+from src.questions_processing import QuestionsProcessor
+
+# Initialize and process PDFs
+pipeline = Pipeline(root_path="path/to/pdfs")
+pipeline.process_uploaded_pdfs()
+
+# Ask a question
+processor = QuestionsProcessor(vector_db_dir="path/to/vector_dbs", documents_dir="path/to/chunked_reports")
+question = "What was Company X's revenue in 2022?"
+answer = processor.process_question(question)
+print(answer)
+```
+
+## File Descriptions
+- ``__init__.py``: Initializes the package.
+
+- ``api_request_parallel_processor.py``: Processes API requests concurrently while respecting rate limits.
+
+- ``api_requests.py``: Manages interactions with OpenAI and Gemini APIs for embeddings and answers.
+
+- ``ingestion.py``: Creates FAISS vector databases from chunked reports for retrieval.
+
+- ``parsed_reports_merging.py``: Cleans and formats parsed report content into structured text.
+
+- ``pdf_parsing.py``: Converts PDFs into JSON reports with text, tables, and metadata.
+
+- ``pipeline.py``: Orchestrates the PDF processing and vector database creation workflow.
+
+- ``prompts.py``: Defines advanced prompts and schemas for rephrasing questions and generating structured answers (e.g., RephrasedQuestionsPrompt, AnswerWithRAGContextNumberPrompt).
+
+- ``questions_processing.py``: Answers queries using retrieved document chunks and RAG.
+
+- ``reranking.py``: Reranks retrieved chunks for relevance using LLM-based scoring.
+
+- ``retrieval.py``: Retrieves relevant chunks from vector databases using FAISS.
+
+- ``tables_serialization.py``: Serializes tables into context-independent blocks with OpenAI.
+
+- ``text_splitter.py``: Splits report text into chunks, preserving tables for embedding.
