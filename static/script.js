@@ -3,6 +3,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const htmlElement = document.documentElement;
     const themeToggle = document.getElementById('theme-toggle');
+    const themeIconLight = document.getElementById('theme-icon-light');
+    const themeIconDark = document.getElementById('theme-icon-dark');
     const uploadSection = document.getElementById('upload-section');
     const questionSection = document.getElementById('question-section');
     const uploadLoadingSpinner = document.getElementById('upload-loading-spinner');
@@ -11,9 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const answerDiv = document.getElementById('answer');
 
     // --- Theme Toggle Logic ---
-    const currentTheme = localStorage.getItem('theme');
+
+    // Function to update icon visibility
+    const updateThemeIcons = () => {
+        if (htmlElement.classList.contains('dark')) {
+            themeIconLight.classList.add('hidden');
+            themeIconDark.classList.remove('hidden');
+        } else {
+            themeIconLight.classList.remove('hidden');
+            themeIconDark.classList.add('hidden');
+        }
+    };
 
     // Apply saved theme or default to system preference
+    const currentTheme = localStorage.getItem('theme');
     if (currentTheme) {
         htmlElement.classList.remove('light', 'dark');
         htmlElement.classList.add(currentTheme);
@@ -24,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         htmlElement.classList.add('light');
         localStorage.setItem('theme', 'light');
     }
+    updateThemeIcons(); // Set initial icon state
 
     themeToggle.addEventListener('click', () => {
         if (htmlElement.classList.contains('light')) {
@@ -35,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             htmlElement.classList.add('light');
             localStorage.setItem('theme', 'light');
         }
+        updateThemeIcons(); // Update icons on toggle
     });
 
     // --- HTMX Event Listeners ---
@@ -50,25 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle loading indicators before a request is sent
     document.body.addEventListener('htmx:beforeRequest', function(event) {
+        // HTMX's hx-indicator handles showing the spinner, but we can clear old content here.
         if (event.detail.path === '/upload_pdfs/') {
-            uploadLoadingSpinner.classList.remove('hidden');
             uploadStatus.innerHTML = ''; // Clear previous status
         } else if (event.detail.path === '/ask_question/') {
-            questionLoadingSpinner.classList.remove('hidden');
             answerDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400 animate-pulse">Thinking...</p>'; // Show thinking message
         }
     });
 
-    // Handle loading indicators after a request has completed
+    // Handle responses after a request has completed
     document.body.addEventListener('htmx:afterRequest', function(event) {
+        // HTMX's hx-indicator handles hiding the spinner automatically.
         if (event.detail.path === '/upload_pdfs/') {
-            uploadLoadingSpinner.classList.add('hidden');
-            if (event.detail.xhr.status >= 400) {
+            if (event.detail.failed) { // More robust check for failure
                 uploadStatus.innerHTML = `<p class="error">Error uploading files: ${event.detail.xhr.responseText || 'Please try again.'}</p>`;
             }
         } else if (event.detail.path === '/ask_question/') {
-            questionLoadingSpinner.classList.add('hidden');
-            if (event.detail.xhr.status >= 400) {
+            if (event.detail.failed) {
                 answerDiv.innerHTML = `<p class="error">Error getting answer: ${event.detail.xhr.responseText || 'Please try again.'}</p>`;
             } else if (event.detail.xhr.status === 200 && event.detail.target.id === 'answer' && !event.detail.target.innerHTML.trim()) {
                 // If no content is returned for the answer, display a default message
